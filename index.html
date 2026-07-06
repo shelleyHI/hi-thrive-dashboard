@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HI Thrive — by Healthy Innovations</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --sage: #4A7C59; --sage-light: #E8F0EA; --sage-mid: #B8D4BC;
+  --plum: #5B4B8A; --plum-light: #EDE9F6; --plum-mid: #C5B8E8;
+  --sand: #F7F5F0; --sand-dark: #EDE9E0; --ink: #1C1C1A;
+  --ink-mid: #4A4A46; --ink-light: #8A8A82; --white: #FFFFFF;
+  --border: #E2DDD6; --amber: #C17F24; --amber-light: #FDF3E3;
+  --radius: 10px; --radius-lg: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); min-height: 100vh; }
+
+/* LOGIN PAGE */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sand);
+}
+.login-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+.login-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  color: var(--sage);
+  margin-bottom: 4px;
+  letter-spacing: -0.5px;
+}
+.login-by {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-style: italic;
+  margin-bottom: 32px;
+}
+.login-heading {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.login-sub {
+  font-size: 13px;
+  color: var(--ink-light);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-mid);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--sand);
+  color: var(--ink);
+  outline: none;
+  transition: border-color .12s;
+}
+.field input:focus { border-color: var(--sage-mid); background: var(--white); }
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--sage);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background .12s;
+}
+.login-btn:hover { background: #3d6b4a; }
+.login-error {
+  background: #FAEAE4;
+  border: 1px solid #e8b8a8;
+  color: #8B3A22;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+}
+.login-disclaimer {
+  font-size: 11px;
+  color: var(--ink-light);
+  text-align: center;
+  margin-top: 20px;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* MODE BAR */
+.mode-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mode-brand-name { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--sage); }
+.mode-brand-by { font-size: 12px; color: var(--ink-light); margin-left: 10px; }
+.mode-tabs { display: flex; gap: 6px; background: var(--sand); border-radius: 8px; padding: 4px; }
+.mode-tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--ink-mid); transition: all .15s; font-family: 'DM Sans', sans-serif; }
+.mode-tab.active-prac { background: var(--sage); color: var(--white); }
+.mode-tab.active-client { background: var(--plum); color: var(--white); }
+.signout-btn { font-size: 12px; color: var(--ink-light); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 6px 10px; border-radius: 6px; }
+.signout-btn:hover { background: var(--sand-dark); color: var(--ink); }
+
+/* APP LAYOUT */
+.app { display: flex; height: calc(100vh - 49px); }
+.view { display: none; width: 100%; }
+.view.active { display: flex; }
+.sidebar { width: 220px; min-width: 220px; background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0 16px; }
+.sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.sidebar-logo-name { font-family: 'DM Serif Display', serif; font-size: 22px; letter-spacing: -0.3px; }
+.sidebar-logo-name.sage { color: var(--sage); }
+.sidebar-logo-name.plum { color: var(--plum); }
+.sidebar-logo-sub { font-size: 11px; color: var(--ink-light); margin-top: 2px; font-style: italic; }
+.nav-group-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-light); padding: 0 20px 6px; margin-top: 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13.5px; color: var(--ink-mid); cursor: pointer; border-left: 2px solid transparent; transition: all .12s; }
+.nav-item:hover { background: var(--sand); color: var(--ink); }
+.nav-item.active-sage { color: var(--sage); background: var(--sage-light); border-left-color: var(--sage); font-weight: 500; }
+.nav-item.active-plum { color: var(--plum); background: var(--plum-light); border-left-color: var(--plum); font-weight: 500; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .5; flex-shrink: 0; }
+.sidebar-footer { margin-top: auto; padding: 16px 20px 0; border-top: 1px solid var(--border); font-size: 11px; color: var(--ink-light); font-style: italic; }
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+.topbar-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); letter-spacing: -0.2px; }
+.content { padding: 24px 28px; flex: 1; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* COMPONENTS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: all .12s; }
+.btn-sage { background: var(--sage); color: var(--white); }
+.btn-sage:hover { background: #3d6b4a; }
+.btn-plum { background: var(--plum); color: var(--white); }
+.btn-plum:hover { background: #4c3d78; }
+.metrics { display: grid; gap: 14px; margin-bottom: 24px; }
+.metrics-4 { grid-template-columns: repeat(4, 1fr); }
+.metrics-3 { grid-template-columns: repeat(3, 1fr); }
+.metric { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+.metric-label { font-size: 11px; font-weight: 500; color: var(--ink-light); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+.metric-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--ink); }
+.metric-sub { font-size: 11px; color: var(--ink-light); margin-top: 4px; }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 16px; }
+.row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--sand-dark); }
+.row:last-child { border-bottom: none; padding-bottom: 0; }
+.row-primary { font-size: 13.5px; color: var(--ink); font-weight: 500; }
+.row-secondary { font-size: 12px; color: var(--ink-light); margin-top: 2px; }
+.badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+.badge-sage { background: var(--sage-light); color: var(--sage); }
+.badge-plum { background: var(--plum-light); color: var(--plum); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.client-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+.client-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; cursor: pointer; transition: border-color .15s; }
+.client-card:hover { border-color: var(--sage-mid); }
+.client-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.av-sage { background: var(--sage-light); color: var(--sage); }
+.av-plum { background: var(--plum-light); color: var(--plum); }
+.av-amber { background: var(--amber-light); color: var(--amber); }
+.client-name { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.client-email { font-size: 11px; color: var(--ink-light); margin-top: 2px; }
+.kb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.kb-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+.kb-tag { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; border-radius: 20px; margin-bottom: 8px; }
+.kb-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.kb-preview { font-size: 12px; color: var(--ink-light); line-height: 1.6; }
+.chat-outer { display: flex; flex-direction: column; height: calc(100vh - 145px); }
+.chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 72%; padding: 11px 15px; border-radius: 14px; font-size: 13.5px; line-height: 1.65; }
+.msg-ai { background: var(--white); border: 1px solid var(--border); color: var(--ink); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg-sage { background: var(--sage); color: var(--white); align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg-plum { background: var(--plum); color: var(--white); align-self: flex-end; border-bottom-right-radius: 4px; }
+.chat-input-row { display: flex; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--white); flex-shrink: 0; }
+.chat-input-row input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13.5px; font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); outline: none; }
+.chat-input-row input:focus { border-color: var(--sage-mid); background: var(--white); }
+.plan-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--sand-dark); }
+.plan-item:last-child { border-bottom: none; }
+.plan-icon-wrap { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; background: var(--sand-dark); }
+.plan-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.plan-desc { font-size: 12.5px; color: var(--ink-mid); margin-top: 3px; line-height: 1.6; }
+.tracker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 16px; }
+.tracker-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+.tracker-label { font-size: 12px; font-weight: 500; color: var(--ink-mid); margin-bottom: 10px; }
+.slider-row { display: flex; align-items: center; gap: 10px; }
+.slider-row input[type=range] { flex: 1; accent-color: var(--plum); }
+.slider-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); min-width: 22px; text-align: right; }
+.log-btn { width: 100%; padding: 11px; background: var(--plum); color: var(--white); border: none; border-radius: var(--radius); font-size: 13.5px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 4px; }
+.log-btn:hover { background: #4c3d78; }
+.logged-msg { display: none; font-size: 12.5px; color: var(--sage); background: var(--sage-light); border: 1px solid var(--sage-mid); padding: 10px 14px; border-radius: var(--radius); margin-top: 10px; text-align: center; font-weight: 500; }
+.user-pill { display: flex; align-items: center; gap: 8px; }
+.user-av-sm { width: 30px; height: 30px; border-radius: 50%; background: var(--plum-light); color: var(--plum); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.user-name-sm { font-size: 13px; color: var(--ink-mid); font-weight: 500; }
+.section-heading { font-size: 13px; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: .06em; margin: 20px 0 10px; }
+.section-heading:first-child { margin-top: 0; }
+.disclaimer { background: var(--amber-light); border: 1px solid #e8c88a; border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--amber); margin-bottom: 20px; line-height: 1.6; }
+.resource-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--sand-dark); }
+.resource-row:last-child { border-bottom: none; }
+.resource-title { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.resource-meta { font-size: 11.5px; color: var(--ink-light); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div class="login-logo">HI Thrive</div>
+    <div class="login-by">by Healthy Innovations</div>
+    <div class="login-heading">Welcome back</div>
+    <div class="login-sub">Sign in to access your health coaching portal.</div>
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')signIn()">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')signIn()">
+    </div>
+    <button class="login-btn" onclick="signIn()">Sign in</button>
+    <div class="login-error" id="login-error">Incorrect email or password. Please try again.</div>
+    <div class="login-disclaimer">HI Thrive prototype · Your data is stored securely in Australia</div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until logged in) -->
+<div id="main-app" style="display:none;">
+
+<!-- MODE BAR -->
+<div class="mode-bar">
+  <div>
+    <span class="mode-brand-name">HI Thrive</span>
+    <span class="mode-brand-by">by Healthy Innovations</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="mode-tabs">
+      <button class="mode-tab active-prac" id="tab-prac" onclick="switchView('prac')">Practitioner</button>
+      <button class="mode-tab" id="tab-client" onclick="switchView('client')">Client portal</button>
+    </div>
+    <button class="signout-btn" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- PRACTITIONER VIEW -->
+<div class="view active" id="view-prac">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-name sage">HI Thrive</div>
+      <div class="sidebar-logo-sub">Practitioner dashboard</div>
+    </div>
+    <div class="nav-group-label">Main</div>
+    <div class="nav-item active-sage" onclick="showPage('prac','dashboard',this)"><span class="nav-dot"></span>Dashboard</div>
+    <div class="nav-item" onclick="showPage('prac','clients',this)"><span class="nav-dot"></span>Clients</div>
+    <div class="nav-item" onclick="showPage('prac','consultations',this)"><span class="nav-dot"></span>Consultations</div>
+    <div class="nav-item" onclick="showPage('prac','healthplans',this)"><span class="nav-dot"></span>Health plans</div>
+    <div class="nav-item" onclick="showPage('prac','chat',this)"><span class="nav-dot"></span>Thrive chat</div>
+    <div class="nav-item" onclick="showPage('prac','knowledge',this)"><span class="nav-dot"></span>Knowledge base</div>
+    <div class="nav-item" onclick="showPage('prac','emails',this)"><span class="nav-dot"></span>Emails</div>
+    <div class="sidebar-footer">Prototype · Demo data only</div>
+  </div>
+  <div class="main">
+    <div id="prac-dashboard" class="page active">
+      <div class="topbar"><span class="topbar-title">Dashboard</span><button class="btn btn-sage">+ New client</button></div>
+      <div class="content">
+        <div class="disclaimer">⚠️ <strong>Prototype only.</strong> No real client data is stored or displayed.</div>
+        <div class="metrics metrics-4">
+          <div class="metric"><div class="metric-label">Active clients</div><div class="metric-value">3</div></div>
+          <div class="metric"><div class="metric-label">Consultations</div><div class="metric-value">4</div></div>
+          <div class="metric"><div class="metric-label">Health plans</div><div class="metric-value">3</div></div>
+          <div class="metric"><div class="metric-label">Pending emails</div><div class="metric-value">0</div></div>
+        </div>
+        <div class="section-heading">Recent consultations</div>
+        <div class="card">
+          <div class="row"><div><div class="row-primary">Natasha Allmark</div><div class="row-secondary">2 Apr 2026 · Initial consultation</div></div><span class="badge badge-sage">finalised</span></div>
+          <div class="row"><div><div class="row-primary">Simone Clarke</div><div class="row-secondary">24 Mar 2026 · 6-week review</div></div><span class="badge badge-sage">finalised</span></div>
+          <div class="row"><div><div class="row-primary">Seema Barooah</div><div class="row-secondary">15 Jan 2026 · Initial consultation</div></div><span class="badge badge-sage">finalised</span></div>
+        </div>
+        <div class="section-heading">Needs your review</div>
+        <div class="card" style="color:var(--ink-light);font-size:13px;text-align:center;padding:28px;">All caught up — nothing pending review</div>
+      </div>
+    </div>
+    <div id="prac-clients" class="page">
+      <div class="topbar"><span class="topbar-title">Clients</span><button class="btn btn-sage">+ Add client</button></div>
+      <div class="content">
+        <div class="client-grid">
+          <div class="client-card"><div class="client-av av-sage">NA</div><div class="client-name">Natasha Allmark</div><div class="client-email">natasha@healthyinnovations.com.au</div><div style="margin-top:8px"><span class="badge badge-plum">perimenopause</span></div></div>
+          <div class="client-card"><div class="client-av av-plum">SC</div><div class="client-name">Simone Clarke</div><div class="client-email">sclarke1976@gmail.com</div><div style="margin-top:8px"><span class="badge badge-amber">perimenopause</span></div></div>
+          <div class="client-card"><div class="client-av av-amber">SB</div><div class="client-name">Seema Barooah</div><div class="client-email">seemagb19@gmail.com</div><div style="margin-top:8px"><span class="badge badge-sage">postmenopause</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="prac-consultations" class="page">
+      <div class="topbar"><span class="topbar-title">Consultations</span><button class="btn btn-sage">+ New consultation</button></div>
+      <div class="content">
+        <div class="card">
+          <div class="row"><div><div class="row-primary">Natasha Allmark</div><div class="row-secondary">2 Apr 2026 · Initial consultation</div></div><span class="badge badge-sage">finalised</span></div>
+          <div class="row"><div><div class="row-primary">Simone Clarke</div><div class="row-secondary">24 Mar 2026 · 6-week review</div></div><span class="badge badge-sage">finalised</span></div>
+          <div class="row"><div><div class="row-primary">Seema Barooah</div><div class="row-secondary">15 Jan 2026 · Initial consultation</div></div><span class="badge badge-sage">finalised</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="prac-healthplans" class="page">
+      <div class="topbar"><span class="topbar-title">Health plans</span><button class="btn btn-sage">+ New plan</button></div>
+      <div class="content">
+        <div class="card">
+          <div class="row"><div><div class="row-primary">Natasha's menopause health plan</div><div class="row-secondary">Natasha Allmark · 11 May 2026</div></div><span class="badge badge-sage">published</span></div>
+          <div class="row"><div><div class="row-primary">Simone's perimenopause wellness plan</div><div class="row-secondary">Simone Clarke · 11 May 2026</div></div><span class="badge badge-sage">published</span></div>
+          <div class="row"><div><div class="row-primary">Seema's postmenopause wellness plan</div><div class="row-secondary">Seema Barooah · 11 May 2026</div></div><span class="badge badge-sage">published</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="prac-chat" class="page">
+      <div class="topbar"><span class="topbar-title">Thrive chat</span><span style="font-size:12px;color:var(--ink-light)">Testing AI responses</span></div>
+      <div class="content" style="padding:0;height:100%;display:flex;flex-direction:column;">
+        <div class="chat-messages" id="prac-msgs">
+          <div class="msg msg-ai">Hi — I'm Thrive, the HI Thrive AI health coaching assistant. How can I help today?</div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="prac-input" placeholder="Test a client question…" onkeydown="if(event.key==='Enter')sendMsg('prac')">
+          <button class="btn btn-sage" onclick="sendMsg('prac')">Send</button>
+        </div>
+      </div>
+    </div>
+    <div id="prac-knowledge" class="page">
+      <div class="topbar"><span class="topbar-title">Knowledge base</span><button class="btn btn-sage">+ Add document</button></div>
+      <div class="content">
+        <div class="kb-grid">
+          <div class="kb-card"><span class="kb-tag" style="background:var(--plum-light);color:var(--plum)">Consultation templates</span><div class="kb-title">SOAP notes — menopause coaching</div><div class="kb-preview">Subjective, Objective, Assessment, Plan framework for initial and review consultations…</div></div>
+          <div class="kb-card"><span class="kb-tag" style="background:var(--sage-light);color:var(--sage)">Protocols & plans</span><div class="kb-title">Standard menopause health coaching protocol</div><div class="kb-preview">Comprehensive symptom review using Menopause Rating Scale. Lifestyle assessment…</div></div>
+          <div class="kb-card"><span class="kb-tag" style="background:var(--amber-light);color:var(--amber)">Practitioner voice</span><div class="kb-title">Clinic philosophy & Shelley's voice</div><div class="kb-preview">HI Thrive is a specialist menopause health coaching service…</div></div>
+          <div class="kb-card"><span class="kb-tag" style="background:var(--sage-light);color:var(--sage)">Menopause education</span><div class="kb-title">Energy & fatigue protocol</div><div class="kb-preview">Circadian rhythm reset, nervous system regulation, mitochondrial support…</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="prac-emails" class="page">
+      <div class="topbar"><span class="topbar-title">Emails</span><button class="btn btn-sage">+ Compose</button></div>
+      <div class="content">
+        <div class="card">
+          <div class="row"><div><div class="row-primary">Welcome to HI Thrive, Natasha — your action plan</div><div class="row-secondary">Natasha Allmark · Follow-up</div></div><span class="badge badge-sage">sent</span></div>
+          <div class="row"><div><div class="row-primary">Simone's 6-week check-in — wonderful progress!</div><div class="row-secondary">Simone Clarke · Follow-up</div></div><span class="badge badge-sage">sent</span></div>
+          <div class="row"><div><div class="row-primary">Seema's postmenopause wellness plan is ready</div><div class="row-secondary">Seema Barooah · Plan delivery</div></div><span class="badge badge-sage">sent</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT VIEW -->
+<div class="view" id="view-client">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-name plum">HI Thrive</div>
+      <div class="sidebar-logo-sub" id="client-welcome">Welcome back</div>
+    </div>
+    <div class="nav-group-label">My health</div>
+    <div class="nav-item active-plum" onclick="showPage('client','home',this)"><span class="nav-dot"></span>My dashboard</div>
+    <div class="nav-item" onclick="showPage('client','plan',this)"><span class="nav-dot"></span>My health plan</div>
+    <div class="nav-item" onclick="showPage('client','tracker',this)"><span class="nav-dot"></span>Symptom tracker</div>
+    <div class="nav-item" onclick="showPage('client','viva',this)"><span class="nav-dot"></span>Thrive chat</div>
+    <div class="nav-item" onclick="showPage('client','resources',this)"><span class="nav-dot"></span>Resources</div>
+    <div class="sidebar-footer">Prototype · Demo data only</div>
+  </div>
+  <div class="main">
+    <div id="client-home" class="page active">
+      <div class="topbar">
+        <span class="topbar-title">My dashboard</span>
+        <div class="user-pill"><div class="user-av-sm" id="client-av">?</div><span class="user-name-sm" id="client-name-display">Loading…</span></div>
+      </div>
+      <div class="content">
+        <div class="metrics metrics-3">
+          <div class="metric"><div class="metric-label">Days on plan</div><div class="metric-value">24</div><div class="metric-sub">Started 11 May 2026</div></div>
+          <div class="metric"><div class="metric-label">Next check-in</div><div class="metric-value">Tue</div><div class="metric-sub">With Shelley</div></div>
+          <div class="metric"><div class="metric-label">Thrive chats</div><div class="metric-value">7</div><div class="metric-sub">This month</div></div>
+        </div>
+        <div class="section-heading">My progress</div>
+        <div class="card">
+          <div class="row"><span class="row-primary">Hot flushes (daily average)</span><span class="badge badge-sage">improving</span></div>
+          <div class="row"><span class="row-primary">Sleep quality</span><span class="badge badge-amber">in progress</span></div>
+          <div class="row"><span class="row-primary">Energy levels</span><span class="badge badge-sage">improving</span></div>
+          <div class="row"><span class="row-primary">Protein target (120g/day)</span><span class="badge badge-sage">on track</span></div>
+        </div>
+        <div class="section-heading">Message from Shelley</div>
+        <div class="card">
+          <div style="font-size:13.5px;color:var(--ink);line-height:1.75;font-style:italic;">"Great progress this week! Keep prioritising your magnesium glycinate before bed and let Thrive know if symptoms change. Looking forward to your next check-in."</div>
+          <div style="font-size:12px;color:var(--ink-light);margin-top:8px;font-weight:500;">— Shelley, 4 Jul 2026</div>
+        </div>
+      </div>
+    </div>
+    <div id="client-plan" class="page">
+      <div class="topbar"><span class="topbar-title">My health plan</span></div>
+      <div class="content">
+        <div class="card">
+          <div class="plan-item"><div class="plan-icon-wrap">💊</div><div><div class="plan-title">Supplements</div><div class="plan-desc">Magnesium glycinate 400mg before bed · Vitamin D3 2000IU with breakfast · Omega-3 2g daily · Ashwagandha KSM-66 600mg morning</div></div></div>
+          <div class="plan-item"><div class="plan-icon-wrap">🥗</div><div><div class="plan-title">Nutrition targets</div><div class="plan-desc">Protein 120g+ daily · Phytoestrogens daily — flaxseed, soy, legumes · Calcium 1200mg/day · Eating window 8am–7pm</div></div></div>
+          <div class="plan-item"><div class="plan-icon-wrap">🏋️</div><div><div class="plan-title">Exercise</div><div class="plan-desc">Strength training 3–4x per week · 30 min walk daily · Avoid high-intensity cardio for now</div></div></div>
+          <div class="plan-item"><div class="plan-icon-wrap">🌙</div><div><div class="plan-title">Sleep protocol</div><div class="plan-desc">Room temperature 18°C · No screens 60 min before bed · Magnesium and chamomile tea at 9pm · Consistent wake time 6:30am</div></div></div>
+          <div class="plan-item"><div class="plan-icon-wrap">🧘</div><div><div class="plan-title">Stress support</div><div class="plan-desc">10 min morning breathwork · Journal before bed · Prioritise downtime — this is medical, not optional</div></div></div>
+          <div class="plan-item"><div class="plan-icon-wrap">🧪</div><div><div class="plan-title">Lab tests to follow up</div><div class="plan-desc">FSH, LH, oestradiol · Thyroid panel (TSH, fT3, fT4) · Vitamin D · Fasting insulin and glucose · Cortisol AM/PM</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="client-tracker" class="page">
+      <div class="topbar"><span class="topbar-title">Symptom tracker</span></div>
+      <div class="content">
+        <p style="font-size:13px;color:var(--ink-light);margin-bottom:18px;">Log how you're feeling today. Shelley reviews this before every appointment.</p>
+        <div class="tracker-grid">
+          <div class="tracker-card"><div class="tracker-label">Hot flushes today (count)</div><div class="slider-row"><input type="range" min="0" max="15" value="3" oninput="document.getElementById('hf').textContent=this.value"><span class="slider-val" id="hf">3</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Sleep quality last night (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="6" oninput="document.getElementById('sl').textContent=this.value"><span class="slider-val" id="sl">6</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Energy levels today (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="5" oninput="document.getElementById('en').textContent=this.value"><span class="slider-val" id="en">5</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Mood today (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="7" oninput="document.getElementById('mo').textContent=this.value"><span class="slider-val" id="mo">7</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Anxiety (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="4" oninput="document.getElementById('ax').textContent=this.value"><span class="slider-val" id="ax">4</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Brain fog (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="3" oninput="document.getElementById('bf').textContent=this.value"><span class="slider-val" id="bf">3</span></div></div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;">Notes for Shelley</div>
+          <textarea style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink);resize:none;height:80px;font-family:'DM Sans',sans-serif;background:var(--sand);" placeholder="e.g. woke at 3am again, feeling more anxious this week…"></textarea>
+        </div>
+        <button class="log-btn" onclick="document.getElementById('logged').style.display='block'">Log today's symptoms</button>
+        <div id="logged" class="logged-msg">✓ Logged successfully — Shelley will see this before your next appointment.</div>
+      </div>
+    </div>
+    <div id="client-viva" class="page">
+      <div class="topbar"><span class="topbar-title">Thrive chat</span><span style="font-size:12px;color:var(--ink-light)">Your health support between appointments</span></div>
+      <div class="content" style="padding:0;height:100%;display:flex;flex-direction:column;">
+        <div class="chat-messages" id="client-msgs">
+          <div class="msg msg-ai">Hi! I'm Thrive, your personal health coaching assistant from HI Thrive. I'm here to support you between your appointments with Shelley. What's on your mind today?</div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="client-input" placeholder="Ask Thrive anything about your health…" onkeydown="if(event.key==='Enter')sendMsg('client')">
+          <button class="btn btn-plum" onclick="sendMsg('client')">Send</button>
+        </div>
+      </div>
+    </div>
+    <div id="client-resources" class="page">
+      <div class="topbar"><span class="topbar-title">Resources</span></div>
+      <div class="content">
+        <div class="section-heading">Recommended for you by Shelley</div>
+        <div class="card">
+          <div class="resource-row"><div><div class="resource-title">Sleep better during menopause: a practical guide</div><div class="resource-meta">Guide · Sleep health</div></div><span class="badge badge-plum">new</span></div>
+          <div class="resource-row"><div><div class="resource-title">Strength training in menopause: your essential guide</div><div class="resource-meta">Guide · Exercise</div></div></div>
+          <div class="resource-row"><div><div class="resource-title">Nutrition for hormonal balance</div><div class="resource-meta">Guide · Nutrition</div></div></div>
+          <div class="resource-row"><div><div class="resource-title">Magnesium & menopause: the essential mineral</div><div class="resource-meta">Article · Supplements</div></div></div>
+          <div class="resource-row"><div><div class="resource-title">Understanding perimenopause</div><div class="resource-meta">Article · Education</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main-app -->
+</div><!-- end app -->
+
+<script>
+// Supabase init
+const { createClient } = supabase;
+const sb = createClient(
+  'https://xjpdarzduikzstmrlgwp.supabase.co',
+  'sb_publishable_eqncVVsKRSRsdkfmpxO55Q_adi4s2E8'
+);
+
+// Check if already logged in
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) showApp(session.user);
+});
+
+// Auth state listener
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) showApp(session.user);
+  else showLogin();
+});
+
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { errEl.style.display = 'block'; }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+}
+
+function showApp(user) {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  // Set client name from email
+  const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('client-welcome').textContent = 'Welcome, ' + name.split(' ')[0];
+  document.getElementById('client-name-display').textContent = name;
+  document.getElementById('client-av').textContent = initials;
+}
+
+function showLogin() {
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+}
+
+function switchView(v) {
+  document.getElementById('view-prac').classList.toggle('active', v==='prac');
+  document.getElementById('view-client').classList.toggle('active', v==='client');
+  document.getElementById('tab-prac').className = 'mode-tab' + (v==='prac'?' active-prac':'');
+  document.getElementById('tab-client').className = 'mode-tab' + (v==='client'?' active-client':'');
+}
+
+function showPage(view, id, el) {
+  const prefix = view==='prac' ? 'prac-' : 'client-';
+  document.querySelectorAll('#view-'+view+' .page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(prefix+id).classList.add('active');
+  const ac = view==='prac' ? 'active-sage' : 'active-plum';
+  document.querySelectorAll('#view-'+view+' .nav-item').forEach(n=>n.classList.remove('active-sage','active-plum'));
+  el.classList.add(ac);
+}
+
+const ai = {
+  sleep:"Sleep disruption is really common at this stage. Your plan includes magnesium glycinate 400mg before bed — are you taking that consistently? Also keep your room at 18°C and avoid screens for 60 minutes before sleep.",
+  hot:"Hot flushes are triggered by oestrogen fluctuations. Your plan includes daily flaxseed for phytoestrogens which can help reduce frequency over 6–8 weeks. How many are you having per day? Log that in your symptom tracker.",
+  weight:"Weight changes in perimenopause are largely hormonal. Your plan prioritises strength training and hitting 120g protein daily — the two highest-leverage strategies. Are you managing the protein target most days?",
+  energy:"Fatigue usually comes from disrupted sleep or circadian rhythm issues. Are you getting outside within 30 minutes of waking? Morning light has an outsized effect on daytime energy.",
+  stress:"Stress drives cortisol which worsens hot flushes and disrupts sleep. Your plan includes Ashwagandha KSM-66 and morning breathwork. Even 10 minutes of slow nasal breathing shifts your nervous system meaningfully.",
+  default:"That's a great question. Based on your health plan, I'd suggest starting with your sleep and protein foundations — those two create the platform for everything else to work."
+};
+
+function sendMsg(view) {
+  const inp = document.getElementById(view+'-input');
+  const msgs = document.getElementById(view+'-msgs');
+  const text = inp.value.trim();
+  if(!text) return;
+  const uc = view==='prac' ? 'msg-sage' : 'msg-plum';
+  const u = document.createElement('div');
+  u.className='msg '+uc; u.textContent=text; msgs.appendChild(u);
+  inp.value=''; msgs.scrollTop=msgs.scrollHeight;
+  setTimeout(()=>{
+    const a = document.createElement('div');
+    a.className='msg msg-ai';
+    const l = text.toLowerCase();
+    if(l.includes('sleep')||l.includes('3am')||l.includes('night')||l.includes('wak')) a.textContent=ai.sleep;
+    else if(l.includes('hot')||l.includes('flush')||l.includes('sweat')) a.textContent=ai.hot;
+    else if(l.includes('weight')||l.includes('gain')) a.textContent=ai.weight;
+    else if(l.includes('energy')||l.includes('tired')||l.includes('fatigue')) a.textContent=ai.energy;
+    else if(l.includes('stress')||l.includes('anxious')||l.includes('overwhelm')) a.textContent=ai.stress;
+    else a.textContent=ai.default;
+    msgs.appendChild(a); msgs.scrollTop=msgs.scrollHeight;
+  }, 800);
+}
+</script>
+</body>
+</html>
