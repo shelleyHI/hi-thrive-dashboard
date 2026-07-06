@@ -555,7 +555,7 @@ const ai = {
   default:"That's a great question. Based on your health plan, I'd suggest starting with your sleep and protein foundations — those two create the platform for everything else to work."
 };
 
-function sendMsg(view) {
+async function sendMsg(view) {
   const inp = document.getElementById(view+'-input');
   const msgs = document.getElementById(view+'-msgs');
   const text = inp.value.trim();
@@ -564,18 +564,24 @@ function sendMsg(view) {
   const u = document.createElement('div');
   u.className='msg '+uc; u.textContent=text; msgs.appendChild(u);
   inp.value=''; msgs.scrollTop=msgs.scrollHeight;
-  setTimeout(()=>{
-    const a = document.createElement('div');
-    a.className='msg msg-ai';
-    const l = text.toLowerCase();
-    if(l.includes('sleep')||l.includes('3am')||l.includes('night')||l.includes('wak')) a.textContent=ai.sleep;
-    else if(l.includes('hot')||l.includes('flush')||l.includes('sweat')) a.textContent=ai.hot;
-    else if(l.includes('weight')||l.includes('gain')) a.textContent=ai.weight;
-    else if(l.includes('energy')||l.includes('tired')||l.includes('fatigue')) a.textContent=ai.energy;
-    else if(l.includes('stress')||l.includes('anxious')||l.includes('overwhelm')) a.textContent=ai.stress;
-    else a.textContent=ai.default;
-    msgs.appendChild(a); msgs.scrollTop=msgs.scrollHeight;
-  }, 800);
+
+  const thinking = document.createElement('div');
+  thinking.className='msg msg-ai';
+  thinking.textContent='Thinking...';
+  msgs.appendChild(thinking); msgs.scrollTop=msgs.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    thinking.textContent = data.reply || "Sorry, I couldn't get a response.";
+  } catch(err) {
+    thinking.textContent = "Sorry, something went wrong connecting to Thrive.";
+  }
+  msgs.scrollTop = msgs.scrollHeight;
 }
 </script>
 </body>
