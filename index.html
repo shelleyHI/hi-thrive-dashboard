@@ -559,9 +559,9 @@ function renderMarkdown(text) {
 
 async function loadChatHistory(email, containerId) {
   const msgs = document.getElementById(containerId);
+  msgs.innerHTML = '';
   const { data } = await sb.from('chat_messages').select('*').eq('email', email).order('created_at', { ascending: true });
   if (data && data.length) {
-    msgs.innerHTML = '';
     data.forEach(m => {
       const d = document.createElement('div');
       d.className = 'msg ' + (m.role === 'user' ? 'msg-plum' : 'msg-ai');
@@ -573,7 +573,10 @@ async function loadChatHistory(email, containerId) {
       msgs.appendChild(d);
     });
     msgs.scrollTop = msgs.scrollHeight;
+  } else {
+    msgs.innerHTML = '<div class="msg msg-ai">Hi! I\'m Thrive, your personal health coaching assistant from HI Thrive. I\'m here to support you between your appointments with Shelley. What\'s on your mind today?</div>';
   }
+}
 }
 
 
