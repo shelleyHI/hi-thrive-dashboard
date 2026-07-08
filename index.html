@@ -542,6 +542,21 @@ async function showApp(user) {
   loadChatHistory(email, 'client-msgs');
 }
 
+function renderMarkdown(text) {
+  let html = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  html = html.replace(/^### (.*)$/gm, '<strong>$1</strong>');
+  html = html.replace(/^## (.*)$/gm, '<strong>$1</strong>');
+  html = html.replace(/^# (.*)$/gm, '<strong>$1</strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(^- .*(\n- .*)*)/gm, function(match) {
+    const items = match.split('\n').map(l => '<li>' + l.replace(/^- /, '') + '</li>').join('');
+    return '<ul style="margin:6px 0;padding-left:18px;">' + items + '</ul>';
+  });
+  html = html.replace(/\n{2,}/g, '</p><p>');
+  html = html.replace(/\n/g, '<br>');
+  return '<p style="margin:0 0 8px 0;">' + html + '</p>';
+}
+
 async function loadChatHistory(email, containerId) {
   const msgs = document.getElementById(containerId);
   const { data } = await sb.from('chat_messages').select('*').eq('email', email).order('created_at', { ascending: true });
@@ -550,11 +565,16 @@ async function loadChatHistory(email, containerId) {
     data.forEach(m => {
       const d = document.createElement('div');
       d.className = 'msg ' + (m.role === 'user' ? 'msg-plum' : 'msg-ai');
-      d.textContent = m.content;
+      if (m.role === 'user') {
+        d.textContent = m.content;
+      } else {
+        d.innerHTML = renderMarkdown(m.content);
+      }
       msgs.appendChild(d);
     });
     msgs.scrollTop = msgs.scrollHeight;
   }
+}
 }
 
 function showLogin() {
