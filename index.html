@@ -514,10 +514,24 @@ async function signOut() {
   await sb.auth.signOut();
 }
 
-function showApp(user) {
+async function showApp(user) {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
-  // Set client name from email
+
+  const email = user.email;
+  const { data: staffMatch } = await sb.from('staff').select('email').eq('email', email).maybeSingle();
+  const { data: clientMatch } = await sb.from('clients').select('*').eq('email', email).maybeSingle();
+
+  if (!staffMatch && !clientMatch) {
+    document.getElementById('main-app').innerHTML = '<div style="padding:40px;text-align:center;">Access not recognised. Please contact Shelley.</div>';
+    return;
+  }
+
+  if (!staffMatch && clientMatch) {
+    document.getElementById('tab-prac').style.display = 'none';
+    switchView('client');
+  }
+
   const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
   document.getElementById('client-welcome').textContent = 'Welcome, ' + name.split(' ')[0];
