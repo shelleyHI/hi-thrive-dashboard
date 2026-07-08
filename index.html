@@ -519,7 +519,7 @@ async function showApp(user) {
   document.getElementById('main-app').style.display = 'block';
 
   const email = user.email;
-  const { data: staffMatch } = await sb.from('staff').select('email').eq('email', email).maybeSingle();
+  const { data: staffMatch } = await sb.from('Staff').select('email').eq('email', email).maybeSingle();
   const { data: clientMatch } = await sb.from('clients').select('*').eq('email', email).maybeSingle();
 
   if (!staffMatch && !clientMatch) {
