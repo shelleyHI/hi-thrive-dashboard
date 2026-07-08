@@ -597,6 +597,8 @@ async function sendMsg(view) {
   u.className='msg '+uc; u.textContent=text; msgs.appendChild(u);
   inp.value=''; msgs.scrollTop=msgs.scrollHeight;
 
+  await sb.from('chat_messages').insert({ email: window.currentEmail, role: 'user', content: text });
+
   const thinking = document.createElement('div');
   thinking.className='msg msg-ai';
   thinking.textContent='Thinking...';
@@ -609,11 +611,14 @@ async function sendMsg(view) {
       body: JSON.stringify({ message: text })
     });
     const data = await res.json();
-    thinking.textContent = data.reply || "Sorry, I couldn't get a response.";
+    const reply = data.reply || "Sorry, I couldn't get a response.";
+    thinking.textContent = reply;
+    await sb.from('chat_messages').insert({ email: window.currentEmail, role: 'assistant', content: reply });
   } catch(err) {
     thinking.textContent = "Sorry, something went wrong connecting to Thrive.";
   }
   msgs.scrollTop = msgs.scrollHeight;
+}
 }
 </script>
 </body>
