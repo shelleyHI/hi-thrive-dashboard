@@ -632,7 +632,7 @@ async function sendMsg(view) {
     });
     const data = await res.json();
     const reply = data.reply || "Sorry, I couldn't get a response.";
-    thinking.textContent = reply;
+    thinking.innerHTML = renderMarkdown(reply);
     await sb.from('chat_messages').insert({ email: window.currentEmail, role: 'assistant', content: reply });
   } catch(err) {
     thinking.textContent = "Sorry, something went wrong connecting to Thrive.";
