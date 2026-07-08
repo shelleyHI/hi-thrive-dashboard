@@ -519,6 +519,7 @@ async function showApp(user) {
   document.getElementById('main-app').style.display = 'block';
 
   const email = user.email;
+  window.currentEmail = email;
   const { data: staffMatch } = await sb.from('Staff').select('Email').eq('Email', email).maybeSingle();
   const { data: clientMatch } = await sb.from('clients').select('*').eq('email', email).maybeSingle();
 
@@ -537,6 +538,23 @@ async function showApp(user) {
   document.getElementById('client-welcome').textContent = 'Welcome, ' + name.split(' ')[0];
   document.getElementById('client-name-display').textContent = name;
   document.getElementById('client-av').textContent = initials;
+
+  loadChatHistory(email, 'client-msgs');
+}
+
+async function loadChatHistory(email, containerId) {
+  const msgs = document.getElementById(containerId);
+  const { data } = await sb.from('chat_messages').select('*').eq('email', email).order('created_at', { ascending: true });
+  if (data && data.length) {
+    msgs.innerHTML = '';
+    data.forEach(m => {
+      const d = document.createElement('div');
+      d.className = 'msg ' + (m.role === 'user' ? 'msg-plum' : 'msg-ai');
+      d.textContent = m.content;
+      msgs.appendChild(d);
+    });
+    msgs.scrollTop = msgs.scrollHeight;
+  }
 }
 
 function showLogin() {
