@@ -543,7 +543,7 @@ async function showApp(user) {
   if (!staffMatch && clientMatch) {
     document.getElementById('tab-prac').style.display = 'none';
     switchView('client');
-  }
+  }if (staffMatch) { loadClientLogs(); }
 
   const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
