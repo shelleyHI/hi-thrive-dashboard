@@ -228,6 +228,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
 .resource-row:last-child { border-bottom: none; }
 .resource-title { font-size: 13.5px; font-weight: 500; color: var(--ink); }
 .resource-meta { font-size: 11.5px; color: var(--ink-light); margin-top: 2px; }
+  .hamburger-btn { display: none; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ink); padding: 4px 8px; }
+.sidebar-overlay { display: none; }
+
+@media (max-width: 768px) {
+  .hamburger-btn { display: block; }
+  .sidebar { position: fixed; top: 49px; left: -240px; height: calc(100vh - 49px); z-index: 200; transition: left 0.25s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.15); }
+  .sidebar.open { left: 0; }
+  .sidebar-overlay.open { display: block; position: fixed; top: 49px; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 150; }
+}
 </style>
 </head>
 <body>
