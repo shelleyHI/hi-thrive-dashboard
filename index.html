@@ -267,6 +267,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
 
 <!-- MODE BAR -->
 <div class="mode-bar">
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
   <div>
     <span class="mode-brand-name">HI Thrive</span>
     <span class="mode-brand-by">by Healthy Innovations</span>
@@ -281,6 +282,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
 </div>
 
 <div class="app">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- PRACTITIONER VIEW -->
 <div class="view active" id="view-prac">
