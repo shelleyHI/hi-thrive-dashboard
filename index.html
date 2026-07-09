@@ -577,7 +577,24 @@ async function saveClientMessage(email, textareaId) {
   alert('Message saved for ' + email);
   document.getElementById(textareaId).value = '';
 }
-  async function loadShelleyMessage(email) {
+  async function logSymptoms() {
+  if (!window.currentClientId) { alert('Unable to save — client record not found.'); return; }
+  const payload = {
+    client_id: window.currentClientId,
+    log_date: new Date().toISOString().split('T')[0],
+    hot_flushes: parseInt(document.getElementById('track-hf').value),
+    sleep_quality: parseInt(document.getElementById('track-sl').value),
+    energy_levels: parseInt(document.getElementById('track-en').value),
+    mood: parseInt(document.getElementById('track-mo').value),
+    anxiety: parseInt(document.getElementById('track-ax').value),
+    brain_fog: parseInt(document.getElementById('track-bf').value),
+    notes: document.getElementById('track-notes').value.trim()
+  };
+  const { error } = await sb.from('symptom_logs').insert(payload);
+  if (error) { alert('Something went wrong saving your log.'); console.error(error); return; }
+  document.getElementById('logged').style.display = 'block';
+  document.getElementById('track-notes').value = '';
+}async function loadShelleyMessage(email) {
   const { data } = await sb.from('clients').select('dashboard_message, dashboard_message_date').eq('email', email).maybeSingle();
   const textEl = document.getElementById('shelley-message-text');
   const dateEl = document.getElementById('shelley-message-date');
