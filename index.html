@@ -590,7 +590,29 @@ async function saveClientMessage(email, textareaId) {
   alert('Message saved for ' + email);
   document.getElementById(textareaId).value = '';
 }
-  async function loadClientLogs() {
+  async function saveLabResult() {
+  const email = document.getElementById('lab-client').value;
+  const testType = document.getElementById('lab-type').value.trim();
+  const testDate = document.getElementById('lab-date').value;
+  const resultsText = document.getElementById('lab-results').value.trim();
+  const summary = document.getElementById('lab-summary').value.trim();
+  if (!testType || !resultsText) { alert('Please fill in test type and results.'); return; }
+  const { data: client } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
+  if (!client) { alert('Client not found.'); return; }
+  const { error } = await sb.from('lab_results').insert({
+    client_id: client.id,
+    test_type: testType,
+    test_date: testDate || null,
+    results_text: resultsText,
+    summary: summary
+  });
+  if (error) { alert('Something went wrong saving this result.'); console.error(error); return; }
+  document.getElementById('lab-saved').style.display = 'block';
+  document.getElementById('lab-type').value = '';
+  document.getElementById('lab-date').value = '';
+  document.getElementById('lab-results').value = '';
+  document.getElementById('lab-summary').value = '';
+}async function loadClientLogs() {
   const map = {
     'natasha@healthyinnovations.com.au': 'log-natasha',
     'sclarke1976@gmail.com': 'log-simone',
