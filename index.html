@@ -533,6 +533,7 @@ async function showApp(user) {
   window.currentEmail = email;
   const { data: staffMatch } = await sb.from('Staff').select('Email').eq('Email', email).maybeSingle();
   const { data: clientMatch } = await sb.from('clients').select('*').eq('email', email).maybeSingle();
+  window.currentClientId = clientMatch ? clientMatch.id : null;
 
   if (!staffMatch && !clientMatch) {
     document.getElementById('main-app').innerHTML = '<div style="padding:40px;text-align:center;">Access not recognised. Please contact Shelley.</div>';
