@@ -603,7 +603,8 @@ async function saveClientMessage(email, textareaId) {
   if (!client) { alert('Client not found.'); return; }
   let fileUrl = null;
   if (file) {
-    const filePath = client.id + '/' + Date.now() + '_' + file.name;
+   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const filePath = client.id + '/' + Date.now() + '_' + safeName;
     const { error: uploadError } = await sb.storage.from('lab-files').upload(filePath, file);
     if (uploadError) { alert('File upload failed.'); console.error(uploadError); return; }
     const { data: urlData } = sb.storage.from('lab-files').getPublicUrl(filePath);
