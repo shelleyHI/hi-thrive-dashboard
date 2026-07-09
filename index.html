@@ -596,20 +596,34 @@ async function saveClientMessage(email, textareaId) {
   const testDate = document.getElementById('lab-date').value;
   const resultsText = document.getElementById('lab-results').value.trim();
   const summary = document.getElementById('lab-summary').value.trim();
-  if (!testType || !resultsText) { alert('Please fill in test type and results.'); return; }
+  const fileInput = document.getElementById('lab-file');
+  const file = fileInput.files[0];
+  if (!testType || (!resultsText && !file)) { alert('Please fill in test type, and either paste results or upload a file.'); return; }
   const { data: client } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
   if (!client) { alert('Client not found.'); return; }
+  let fileUrl = null;
+  if (file) {
+    const filePath = client.id + '/' + Date.now() + '_' + file.name;
+    const { error: uploadError } = await sb.storage.from('lab-files').upload(filePath, file);
+    if (uploadError) { alert('File upload failed.'); console.error(uploadError); return; }
+    const { data: urlData } = sb.storage.from('lab-files').getPublicUrl(filePath);
+    fileUrl = urlData.publicUrl;
+  }
   const { error } = await sb.from('lab_results').insert({
     client_id: client.id,
     test_type: testType,
     test_date: testDate || null,
     results_text: resultsText,
-    summary: summary
+    summary: summary,
+    file_url: fileUrl
   });
   if (error) { alert('Something went wrong saving this result.'); console.error(error); return; }
   document.getElementById('lab-saved').style.display = 'block';
   document.getElementById('lab-type').value = '';
   document.getElementById('lab-date').value = '';
+  document.getElementById('lab-results').value = '';
+  document.getElementById('lab-summary').value = '';
+  fileInput.value = '';
   document.getElementById('lab-results').value = '';
   document.getElementById('lab-summary').value = '';
 }async function loadClientLogs() {
