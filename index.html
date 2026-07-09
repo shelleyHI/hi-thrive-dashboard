@@ -446,19 +446,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
       <div class="topbar"><span class="topbar-title">Symptom tracker</span></div>
       <div class="content">
         <p style="font-size:13px;color:var(--ink-light);margin-bottom:18px;">Log how you're feeling today. Shelley reviews this before every appointment.</p>
-        <div class="tracker-grid">
-          <div class="tracker-card"><div class="tracker-label">Hot flushes today (count)</div><div class="slider-row"><input type="range" min="0" max="15" value="3" oninput="document.getElementById('hf').textContent=this.value"><span class="slider-val" id="hf">3</span></div></div>
-          <div class="tracker-card"><div class="tracker-label">Sleep quality last night (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="6" oninput="document.getElementById('sl').textContent=this.value"><span class="slider-val" id="sl">6</span></div></div>
-          <div class="tracker-card"><div class="tracker-label">Energy levels today (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="5" oninput="document.getElementById('en').textContent=this.value"><span class="slider-val" id="en">5</span></div></div>
-          <div class="tracker-card"><div class="tracker-label">Mood today (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="7" oninput="document.getElementById('mo').textContent=this.value"><span class="slider-val" id="mo">7</span></div></div>
-          <div class="tracker-card"><div class="tracker-label">Anxiety (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="4" oninput="document.getElementById('ax').textContent=this.value"><span class="slider-val" id="ax">4</span></div></div>
-          <div class="tracker-card"><div class="tracker-label">Brain fog (1–10)</div><div class="slider-row"><input type="range" min="1" max="10" value="3" oninput="document.getElementById('bf').textContent=this.value"><span class="slider-val" id="bf">3</span></div></div>
+       <div class="tracker-grid">
+          <div class="tracker-card"><div class="tracker-label">Hot flushes today (count)</div><div class="slider-row"><input type="range" id="track-hf" min="0" max="15" value="3" oninput="document.getElementById('hf').textContent=this.value"><span class="slider-val" id="hf">3</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Sleep quality last night (1–10)</div><div class="slider-row"><input type="range" id="track-sl" min="1" max="10" value="6" oninput="document.getElementById('sl').textContent=this.value"><span class="slider-val" id="sl">6</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Energy levels today (1–10)</div><div class="slider-row"><input type="range" id="track-en" min="1" max="10" value="5" oninput="document.getElementById('en').textContent=this.value"><span class="slider-val" id="en">5</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Mood today (1–10)</div><div class="slider-row"><input type="range" id="track-mo" min="1" max="10" value="7" oninput="document.getElementById('mo').textContent=this.value"><span class="slider-val" id="mo">7</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Anxiety (1–10)</div><div class="slider-row"><input type="range" id="track-ax" min="1" max="10" value="4" oninput="document.getElementById('ax').textContent=this.value"><span class="slider-val" id="ax">4</span></div></div>
+          <div class="tracker-card"><div class="tracker-label">Brain fog (1–10)</div><div class="slider-row"><input type="range" id="track-bf" min="1" max="10" value="3" oninput="document.getElementById('bf').textContent=this.value"><span class="slider-val" id="bf">3</span></div></div>
         </div>
         <div class="card">
           <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;">Notes for Shelley</div>
-          <textarea style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink);resize:none;height:80px;font-family:'DM Sans',sans-serif;background:var(--sand);" placeholder="e.g. woke at 3am again, feeling more anxious this week…"></textarea>
+          <textarea id="track-notes" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink);resize:none;height:80px;font-family:'DM Sans',sans-serif;background:var(--sand);" placeholder="e.g. woke at 3am again, feeling more anxious this week…"></textarea>
         </div>
-        <button class="log-btn" onclick="document.getElementById('logged').style.display='block'">Log today's symptoms</button>
+        <button class="log-btn" onclick="logSymptoms()">Log today's symptoms</button>
         <div id="logged" class="logged-msg">✓ Logged successfully — Shelley will see this before your next appointment.</div>
       </div>
     </div>
