@@ -551,6 +551,7 @@ async function showApp(user) {
   document.getElementById('client-av').textContent = initials;
 
   loadChatHistory(email, 'client-msgs');
+  loadShelleyMessage(email);
 }
 
 function renderMarkdown(text) {
@@ -568,7 +569,19 @@ function renderMarkdown(text) {
   return '<p style="margin:0 0 8px 0;">' + html + '</p>';
 }
 
-async function loadChatHistory(email, containerId) {
+async function loadShelleyMessage(email) {
+  const { data } = await sb.from('clients').select('dashboard_message, dashboard_message_date').eq('email', email).maybeSingle();
+  const textEl = document.getElementById('shelley-message-text');
+  const dateEl = document.getElementById('shelley-message-date');
+  if (data && data.dashboard_message) {
+    textEl.textContent = '"' + data.dashboard_message + '"';
+    const d = data.dashboard_message_date ? new Date(data.dashboard_message_date).toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'}) : '';
+    dateEl.textContent = '— Shelley' + (d ? ', ' + d : '');
+  } else {
+    textEl.textContent = 'No message yet — check back after your next appointment.';
+    dateEl.textContent = '';
+  }
+}async function loadChatHistory(email, containerId) {
   const msgs = document.getElementById(containerId);
   msgs.innerHTML = '';
   const { data } = await sb.from('chat_messages').select('*').eq('email', email).order('created_at', { ascending: true });
