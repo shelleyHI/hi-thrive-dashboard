@@ -577,7 +577,28 @@ async function saveClientMessage(email, textareaId) {
   alert('Message saved for ' + email);
   document.getElementById(textareaId).value = '';
 }
-  async function logSymptoms() {
+  async function loadClientLogs() {
+  const map = {
+    'natasha@healthyinnovations.com.au': 'log-natasha',
+    'sclarke1976@gmail.com': 'log-simone',
+    'seemagb19@gmail.com': 'log-seema'
+  };
+  const { data: clientsList } = await sb.from('clients').select('id, email');
+  if (!clientsList) return;
+  for (const c of clientsList) {
+    const containerId = map[c.email];
+    if (!containerId) continue;
+    const el = document.getElementById(containerId);
+    if (!el) continue;
+    const { data: logs } = await sb.from('symptom_logs').select('*').eq('client_id', c.id).order('log_date', { ascending: false }).limit(1);
+    if (logs && logs.length) {
+      const log = logs[0];
+      el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);margin-top:8px;"><strong>Latest log (' + log.log_date + '):</strong> Hot flushes ' + log.hot_flushes + ', Sleep ' + log.sleep_quality + '/10, Energy ' + log.energy_levels + '/10, Mood ' + log.mood + '/10, Anxiety ' + log.anxiety + '/10, Brain fog ' + log.brain_fog + '/10' + (log.notes ? '<br><em>"' + log.notes + '"</em>' : '') + '</div>';
+    } else {
+      el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);margin-top:8px;">No symptom logs yet.</div>';
+    }
+  }
+}async function logSymptoms() {
   if (!window.currentClientId) { alert('Unable to save — client record not found.'); return; }
   const payload = {
     client_id: window.currentClientId,
