@@ -596,7 +596,17 @@ function showLogin() {
   document.getElementById('main-app').style.display = 'none';
 }
 
-function switchView(v) {
+function toggleSidebar() {
+  const sidebar = document.querySelector('.view.active .sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('open'));
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+  function switchView(v) {
   document.getElementById('view-prac').classList.toggle('active', v==='prac');
   document.getElementById('view-client').classList.toggle('active', v==='client');
   document.getElementById('tab-prac').className = 'mode-tab' + (v==='prac'?' active-prac':'');
