@@ -569,7 +569,14 @@ function renderMarkdown(text) {
   return '<p style="margin:0 0 8px 0;">' + html + '</p>';
 }
 
-async function loadShelleyMessage(email) {
+async function saveClientMessage(email, textareaId) {
+  const text = document.getElementById(textareaId).value.trim();
+  if (!text) return;
+  await sb.from('clients').update({ dashboard_message: text, dashboard_message_date: new Date().toISOString() }).eq('email', email);
+  alert('Message saved for ' + email);
+  document.getElementById(textareaId).value = '';
+}
+  async function loadShelleyMessage(email) {
   const { data } = await sb.from('clients').select('dashboard_message, dashboard_message_date').eq('email', email).maybeSingle();
   const textEl = document.getElementById('shelley-message-text');
   const dateEl = document.getElementById('shelley-message-date');
