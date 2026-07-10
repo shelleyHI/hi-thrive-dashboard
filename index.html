@@ -558,7 +558,7 @@ async function showApp(user) {
   if (!staffMatch && clientMatch) {
     document.getElementById('tab-prac').style.display = 'none';
     switchView('client');
-  }if (staffMatch) { loadClientLogs(); }
+  }if (staffMatch) { loadClientLogs(); }if (staffMatch) { loadAllClientLabs(); }
 
   const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
@@ -567,7 +567,7 @@ async function showApp(user) {
   document.getElementById('client-av').textContent = initials;
 
   loadChatHistory(email, 'client-msgs');
-  loadShelleyMessage(email);
+  loadShelleyMessage(email);loadLabResults(email, 'client-labs');
 }
 
 function renderMarkdown(text) {
