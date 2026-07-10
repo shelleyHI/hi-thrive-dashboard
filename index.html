@@ -586,7 +586,47 @@ async function saveClientMessage(email, textareaId) {
   alert('Message saved for ' + email);
   document.getElementById(textareaId).value = '';
 }
-  async function loadLabResults(email, containerId) {
+  async function renderClientCards() {
+  const { data: clientsList } = await sb.from('clients').select('*').order('created_at', { ascending: true });
+  const grid = document.getElementById('client-grid');
+  if (!clientsList || !clientsList.length) { grid.innerHTML = '<div style="padding:20px;color:var(--ink-light);">No clients yet.</div>'; return; }
+  grid.innerHTML = clientsList.map(c => {
+    const initials = (c.full_name || c.email).split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    return '<div class="client-card">' +
+      '<div class="client-av av-sage">' + initials + '</div>' +
+      '<div class="client-name">' + (c.full_name || '(no name)') + '</div>' +
+      '<div class="client-email">' + c.email + '</div>' +
+      (c.menopause_stage ? '<div style="margin-top:8px"><span class="badge badge-plum">' + c.menopause_stage + '</span></div>' : '') +
+      '<div id="log-' + c.id + '"></div>' +
+      '<div id="labs-' + c.id + '"></div>' +
+      '<textarea id="msg-' + c.id + '" placeholder="Write a message for this client..." style="width:100%;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;resize:none;height:60px;"></textarea>' +
+      '<button class="btn btn-sage" style="margin-top:6px;width:100%;" onclick="saveClientMessage(\'' + c.email + '\',\'msg-' + c.id + '\')">Save message</button>' +
+      '</div>';
+  }).join('');
+  for (const c of clientsList) {
+    loadClientLogSingle(c.id, 'log-' + c.id);
+    loadLabResults(c.email, 'labs-' + c.id);
+  }
+}
+
+async function loadClientLogSingle(clientId, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const { data: logs } = await sb.from('symptom_logs').select('*').eq('client_id', clientId).order('log_date', { ascending: false }).limit(1);
+  if (logs && logs.length) {
+    const log = logs[0];
+    el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);margin-top:8px;"><strong>Latest log (' + log.log_date + '):</strong> Hot flushes ' + log.hot_flushes + ', Sleep ' + log.sleep_quality + '/10, Energy ' + log.energy_levels + '/10, Mood ' + log.mood + '/10, Anxiety ' + log.anxiety + '/10, Brain fog ' + log.brain_fog + '/10' + (log.notes ? '<br><em>"' + log.notes + '"</em>' : '') + '</div>';
+  } else {
+    el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);margin-top:8px;">No symptom logs yet.</div>';
+  }
+}
+
+async function populateLabClientDropdown() {
+  const { data: clientsList } = await sb.from('clients').select('email, full_name').order('full_name', { ascending: true });
+  const sel = document.getElementById('lab-client');
+  if (!clientsList || !sel) return;
+  sel.innerHTML = clientsList.map(c => '<option value="' + c.email + '">' + (c.full_name || c.email) + '</option>').join('');
+}async function loadLabResults(email, containerId) {
   const el = document.getElementById(containerId);
   const { data: client } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
   if (!client) { el.innerHTML = 'No client record found.'; return; }
