@@ -592,7 +592,32 @@ async function saveClientMessage(email, textareaId) {
   alert('Message saved for ' + email);
   document.getElementById(textareaId).value = '';
 }
-  async function saveLabResult() {
+  async function loadLabResults(email, containerId) {
+  const el = document.getElementById(containerId);
+  const { data: client } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
+  if (!client) { el.innerHTML = 'No client record found.'; return; }
+  const { data: labs } = await sb.from('lab_results').select('*').eq('client_id', client.id).order('test_date', { ascending: false });
+  if (!labs || !labs.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);">No lab results yet.</div>'; return; }
+  el.innerHTML = labs.map(l => {
+    let row = '<div style="font-size:12px;color:var(--ink-light);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">';
+    row += '<strong>' + l.test_type + (l.test_date ? ' — ' + l.test_date : '') + '</strong>';
+    if (l.summary) row += '<br>' + l.summary;
+    if (l.file_url) row += '<br><a href="' + l.file_url + '" target="_blank">View file</a>';
+    row += '</div>';
+    return row;
+  }).join('');
+}
+
+async function loadAllClientLabs() {
+  const map = {
+    'natasha@healthyinnovations.com.au': 'labs-natasha',
+    'sclarke1976@gmail.com': 'labs-simone',
+    'seemagb19@gmail.com': 'labs-seema'
+  };
+  for (const email in map) {
+    loadLabResults(email, map[email]);
+  }
+}async function saveLabResult() {
   const email = document.getElementById('lab-client').value;
   const testType = document.getElementById('lab-type').value.trim();
   const testDate = document.getElementById('lab-date').value;
