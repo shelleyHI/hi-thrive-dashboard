@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password, full_name, menopause_stage, date_of_birth, phone } = req.body;
+  const { email, password, full_name, menopause_stage, date_of_birth, phone, plan_start_date } = req.body;
 
   if (!email || !password || !full_name) {
     return res.status(400).json({ error: 'Email, password, and full name are required.' });
@@ -40,7 +40,8 @@ export default async function handler(req, res) {
         full_name,
         menopause_stage: menopause_stage || null,
         date_of_birth: date_of_birth || null,
-        phone: phone || null
+        phone: phone || null,
+        plan_start_date: plan_start_date || null
       })
     });
     const clientData = await clientRes.json();
