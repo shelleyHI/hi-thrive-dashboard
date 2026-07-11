@@ -564,7 +564,7 @@ async function showApp(user) {
   if (!staffMatch && clientMatch) {
     document.getElementById('tab-prac').style.display = 'none';
     switchView('client');
-  }if (staffMatch) { renderClientCards(); populateLabClientDropdown(); }
+  }if (staffMatch) { renderClientCards(); populateLabClientDropdown(); }if (staffMatch) { loadPracDashboardStats(); }
   const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
   document.getElementById('client-welcome').textContent = 'Welcome, ' + name.split(' ')[0];
@@ -631,7 +631,17 @@ async function createNewClient() {
     status.textContent = 'Something went wrong.'; status.style.color = 'red';
     console.error(err);
   }
-}async function renderClientCards() {
+}async async function loadPracDashboardStats() {
+  const { count: clientCount } = await sb.from('clients').select('*', { count: 'exact', head: true });
+  const { count: consultCount } = await sb.from('consultations').select('*', { count: 'exact', head: true });
+  const { count: planCount } = await sb.from('health_plans').select('*', { count: 'exact', head: true });
+  const clientsEl = document.getElementById('stat-active-clients');
+  const consultEl = document.getElementById('stat-consultations');
+  const plansEl = document.getElementById('stat-health-plans');
+  if (clientsEl) clientsEl.textContent = clientCount ?? '—';
+  if (consultEl) consultEl.textContent = consultCount ?? '—';
+  if (plansEl) plansEl.textContent = planCount ?? '—';
+}function renderClientCards() {
   const { data: clientsList } = await sb.from('clients').select('*').order('created_at', { ascending: true });
   const grid = document.getElementById('client-grid');
   if (!clientsList || !clientsList.length) { grid.innerHTML = '<div style="padding:20px;color:var(--ink-light);">No clients yet.</div>'; return; }
