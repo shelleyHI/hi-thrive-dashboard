@@ -631,7 +631,7 @@ async function createNewClient() {
     status.textContent = 'Something went wrong.'; status.style.color = 'red';
     console.error(err);
   }
-}async async function loadPracDashboardStats() {
+}async function loadPracDashboardStats() {
   const { count: clientCount } = await sb.from('clients').select('*', { count: 'exact', head: true });
   const { count: consultCount } = await sb.from('consultations').select('*', { count: 'exact', head: true });
   const { count: planCount } = await sb.from('health_plans').select('*', { count: 'exact', head: true });
@@ -641,7 +641,7 @@ async function createNewClient() {
   if (clientsEl) clientsEl.textContent = clientCount ?? '—';
   if (consultEl) consultEl.textContent = consultCount ?? '—';
   if (plansEl) plansEl.textContent = planCount ?? '—';
-}function renderClientCards() {
+}async function renderClientCards() {
   const { data: clientsList } = await sb.from('clients').select('*').order('created_at', { ascending: true });
   const grid = document.getElementById('client-grid');
   if (!clientsList || !clientsList.length) { grid.innerHTML = '<div style="padding:20px;color:var(--ink-light);">No clients yet.</div>'; return; }
