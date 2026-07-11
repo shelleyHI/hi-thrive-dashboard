@@ -597,7 +597,41 @@ async function saveClientMessage(email, textareaId) {
   alert('Message saved for ' + email);
   document.getElementById(textareaId).value = '';
 }
-  async function renderClientCards() {
+  function toggleAddClientForm() {
+  const form = document.getElementById('add-client-form');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function createNewClient() {
+  const name = document.getElementById('new-client-name').value.trim();
+  const email = document.getElementById('new-client-email').value.trim();
+  const password = document.getElementById('new-client-password').value;
+  const stage = document.getElementById('new-client-stage').value;
+  const status = document.getElementById('add-client-status');
+  if (!name || !email || !password) { status.textContent = 'Please fill in name, email, and password.'; status.style.color = 'red'; return; }
+  status.textContent = 'Creating...';
+  status.style.color = 'var(--ink-light)';
+  try {
+    const res = await fetch('/api/create-client', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password, full_name: name, menopause_stage: stage || null })
+    });
+    const data = await res.json();
+    if (!res.ok) { status.textContent = data.error || 'Something went wrong.'; status.style.color = 'red'; return; }
+    status.textContent = 'Client created successfully!';
+    status.style.color = 'var(--sage)';
+    document.getElementById('new-client-name').value = '';
+    document.getElementById('new-client-email').value = '';
+    document.getElementById('new-client-password').value = '';
+    document.getElementById('new-client-stage').value = '';
+    renderClientCards();
+    populateLabClientDropdown();
+  } catch (err) {
+    status.textContent = 'Something went wrong.'; status.style.color = 'red';
+    console.error(err);
+  }
+}async function renderClientCards() {
   const { data: clientsList } = await sb.from('clients').select('*').order('created_at', { ascending: true });
   const grid = document.getElementById('client-grid');
   if (!clientsList || !clientsList.length) { grid.innerHTML = '<div style="padding:20px;color:var(--ink-light);">No clients yet.</div>'; return; }
