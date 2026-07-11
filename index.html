@@ -694,6 +694,21 @@ async function loadDaysOnPlan(email) {
   valueEl.textContent = days;
   subEl.textContent = 'Started ' + start.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+async function loadDaysOnPlan(email) {
+  const { data: client } = await sb.from('clients').select('plan_start_date').eq('email', email).maybeSingle();
+  const valueEl = document.getElementById('days-on-plan-value');
+  const subEl = document.getElementById('days-on-plan-sub');
+  if (!client || !client.plan_start_date) {
+    valueEl.textContent = '—';
+    subEl.textContent = 'Not started yet';
+    return;
+  }
+  const start = new Date(client.plan_start_date);
+  const today = new Date();
+  const days = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+  valueEl.textContent = days;
+  subEl.textContent = 'Started ' + start.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 }async function loadLabResults(email, containerId) {
   const el = document.getElementById(containerId);
   const { data: client } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
