@@ -323,9 +323,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
       </div>
     </div>
     <div id="prac-clients" class="page">
-      <div class="topbar"><span class="topbar-title">Clients</span><button class="btn btn-sage">+ Add client</button></div>
+      <div class="topbar"><span class="topbar-title">Clients</span><button class="btn btn-sage" onclick="toggleAddClientForm()">+ Add client</button></div>
       <div class="content">
-       <div class="client-grid" id="client-grid">Loading clients...</div><div class="section-heading">Add lab results</div>
+       <div id="add-client-form" class="card" style="display:none;margin-bottom:20px;">
+          <input id="new-client-name" type="text" placeholder="Full name" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
+          <input id="new-client-email" type="email" placeholder="Email address" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
+          <input id="new-client-password" type="text" placeholder="Password (min 6 characters)" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
+          <select id="new-client-stage" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
+            <option value="">Menopause stage (optional)</option>
+            <option value="perimenopause">Perimenopause</option>
+            <option value="menopause">Menopause</option>
+            <option value="postmenopause">Postmenopause</option>
+          </select>
+          <button class="btn btn-sage" style="width:100%;" onclick="createNewClient()">Create client</button>
+          <div id="add-client-status" style="margin-top:8px;font-size:12px;"></div>
+        </div><div class="client-grid" id="client-grid">Loading clients...</div><div class="section-heading">Add lab results</div>
         <div class="card">
           <select id="lab-client" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
             <option value="">Loading clients...</option>
