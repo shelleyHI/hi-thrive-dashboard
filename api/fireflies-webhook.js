@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   const { meetingId } = req.body;
   if (!meetingId) {
-    return res.status(400).json({ error: 'No meetingId provided.' });
+    return res.status(200).json({ received: true, note: 'No meetingId in payload — likely a test ping.' });
   }
 
   const FIREFLIES_KEY = process.env.FIREFLIES_API_KEY;
