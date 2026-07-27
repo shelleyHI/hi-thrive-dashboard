@@ -41,6 +41,20 @@ export default async function handler(req, res) {
         break;
       }
     }
+    // Fallback: match by title for in-person/mobile recordings without attendee emails
+    if (!matchedClientId && transcript.title) {
+      const titleMatch = transcript.title.match(/^(.+?)\s*-\s*Session/i);
+      const clientNameFromTitle = titleMatch ? titleMatch[1].trim() : null;
+      if (clientNameFromTitle) {
+        const nameRes = await fetch(SUPABASE_URL + '/rest/v1/clients?full_name=ilike.' + encodeURIComponent(clientNameFromTitle) + '&select=id', {
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+        });
+        const nameData = await nameRes.json();
+        if (nameData && nameData.length) {
+          matchedClientId = nameData[0].id;
+        }
+      }
+    }
 
     const transcriptText = (transcript.sentences || []).map(s => (s.speaker_name || 'Speaker') + ': ' + s.text).join('\n');
 
