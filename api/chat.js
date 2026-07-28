@@ -6,6 +6,29 @@ export default async function handler(req, res) {
   const { message, history } = req.body;
 
   try {
+    // NEW: Pull the knowledge base from Supabase before calling Claude
+    let knowledgeContext = '';
+    try {
+      const kbRes = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/knowledge_base?select=topic,category,source_type,content,source`,
+        {
+          headers: {
+            'apikey': process.env.SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + process.env.SUPABASE_ANON_KEY
+          }
+        }
+      );
+      const kbData = await kbRes.json();
+      if (Array.isArray(kbData) && kbData.length) {
+        knowledgeContext = kbData.map(row =>
+          `[${row.category} — ${row.topic}] (${row.source_type === 'conventional' ? 'Conventional medical perspective' : 'Root-cause / functional perspective'}, source: ${row.source})\n${row.content}`
+        ).join('\n\n---\n\n');
+      }
+    } catch (kbError) {
+      console.error('Knowledge base fetch error:', kbError);
+      // Continue without knowledge base rather than failing the whole chat
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -16,7 +39,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 1000,
-        system: "You are Thrive, a warm and supportive health coaching assistant for HI Thrive, part of Healthy Innovations. You support midlife and menopausal women between their physiotherapy appointments with Shelley. Keep answers short and conversational - a few sentences, or a brief bullet list of 3-4 points at most. Avoid long essays with multiple headers. Only use bold or bullets when they genuinely make something easier to scan. You are not a replacement for clinical care — for medical concerns, symptoms needing assessment, or anything urgent, always recommend they contact Shelley or their GP.",
+        system: `You are Thrive, a warm and supportive health coaching assistant for Healthy Innovations, specialising in midlife women's health and menopause.
+
+Use the following knowledge base as your primary reference for clinical and protocol information. Where content is tagged "Root-cause / functional perspective," this reflects Shelley's IHP/functional medicine framework and should be your default lens. Where content is tagged "Conventional medical perspective," present it as the mainstream medical view when relevant or when a client asks about conventional options like MHT/HRT — don't blend it silently into root-cause advice, name it as the conventional view.
+
+KNOWLEDGE BASE:
+${knowledgeContext}
+
+Always recommend clients consult their doctor or Shelley directly for personalised medical decisions, especially around hormone therapy, supplements, and diagnosed conditions.`,
         messages: [
           ...(history || []),
           { role: 'user', content: message }
