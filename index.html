@@ -612,9 +612,9 @@ async function createNewClient() {
   status.textContent = 'Creating...';
   status.style.color = 'var(--ink-light)';
   try {
-    const res = await fetch('/api/create-client', {
+    const { data: { session } } = await sb.auth.getSession();const res = await fetch('/api/create-client', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : '')},
       body: JSON.stringify({ email, password, full_name: name, menopause_stage: stage || null })
     });
     const data = await res.json();
@@ -917,9 +917,9 @@ async function sendMsg(view) {
   msgs.appendChild(thinking); msgs.scrollTop=msgs.scrollHeight;
 
   try {
-    const res = await fetch('/api/chat', {
+    const { data: { session } } = await sb.auth.getSession();const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : '')},
       body: JSON.stringify({ message: text })
     });
     const data = await res.json();
