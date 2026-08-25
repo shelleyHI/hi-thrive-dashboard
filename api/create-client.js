@@ -3,14 +3,34 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const SUPABASE_URL = 'https://xjpdarzduikzstmrlgwp.supabase.co';
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Require a logged-in staff member to call this endpoint
+  const callerToken = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!callerToken) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+  const callerRes = await fetch(SUPABASE_URL + '/auth/v1/user', {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + callerToken }
+  });
+  const caller = await callerRes.json();
+  if (!callerRes.ok || !caller.email) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+  const staffCheck = await fetch(SUPABASE_URL + '/rest/v1/Staff?Email=eq.' + encodeURIComponent(caller.email) + '&select=Email', {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
+  });
+  const staffMatch = await staffCheck.json();
+  if (!Array.isArray(staffMatch) || !staffMatch.length) {
+    return res.status(403).json({ error: 'Staff access only.' });
+  }
+
   const { email, password, full_name, menopause_stage, date_of_birth, phone, plan_start_date } = req.body;
 
   if (!email || !password || !full_name) {
     return res.status(400).json({ error: 'Email, password, and full name are required.' });
   }
-
-  const SUPABASE_URL = 'https://xjpdarzduikzstmrlgwp.supabase.co';
-  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   try {
     const authRes = await fetch(SUPABASE_URL + '/auth/v1/admin/users', {
