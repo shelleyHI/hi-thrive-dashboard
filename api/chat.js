@@ -3,6 +3,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Require any logged-in user (staff or client) to call this endpoint
+  const callerToken = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!callerToken) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+  const callerRes = await fetch(process.env.SUPABASE_URL + '/auth/v1/user', {
+    headers: { 'apikey': process.env.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + callerToken }
+  });
+  if (!callerRes.ok) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+
   const { message, history } = req.body;
 
   try {
