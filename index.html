@@ -725,14 +725,20 @@ async function loadDaysOnPlan(email) {
   if (!client) { el.innerHTML = 'No client record found.'; return; }
   const { data: labs } = await sb.from('lab_results').select('*').eq('client_id', client.id).order('test_date', { ascending: false });
   if (!labs || !labs.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);">No lab results yet.</div>'; return; }
-  el.innerHTML = labs.map(l => {
+  const rows = await Promise.all(labs.map(async l => {
     let row = '<div style="font-size:12px;color:var(--ink-light);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">';
     row += '<strong>' + l.test_type + (l.test_date ? ' — ' + l.test_date : '') + '</strong>';
     if (l.summary) row += '<br>' + l.summary;
-    if (l.file_url) row += '<br><a href="' + l.file_url + '" target="_blank">View file</a>';
+    if (l.file_url) {
+      const { data: signedData } = await sb.storage.from('lab-files').createSignedUrl(l.file_url, 3600);
+      if (signedData && signedData.signedUrl) {
+        row += '<br><a href="' + signedData.signedUrl + '" target="_blank">View file</a>';
+      }
+    }
     row += '</div>';
     return row;
-  }).join('');
+  }));
+  el.innerHTML = rows.join('');
 }
 
 async function loadAllClientLabs() {
@@ -761,8 +767,7 @@ async function loadAllClientLabs() {
     const filePath = client.id + '/' + Date.now() + '_' + safeName;
     const { error: uploadError } = await sb.storage.from('lab-files').upload(filePath, file);
     if (uploadError) { alert('File upload failed.'); console.error(uploadError); return; }
-    const { data: urlData } = sb.storage.from('lab-files').getPublicUrl(filePath);
-    fileUrl = urlData.publicUrl;
+    fileUrl = filePath;
   }
   const { error } = await sb.from('lab_results').insert({
     client_id: client.id,
