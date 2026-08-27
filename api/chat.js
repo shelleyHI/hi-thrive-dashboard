@@ -3,15 +3,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const SUPABASE_URL = 'https://xjpdarzduikzstmrlgwp.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_eqncVVsKRSRsdkfmpxO55Q_adi4s2E8';
+
   // Require any logged-in user (staff or client) to call this endpoint
-  const callerToken = (req.headers.authorization || '').replace('Bearer ', '');
-  if (!callerToken) {
-    return res.status(401).json({ error: 'Not authenticated.' });
-  }
-  const callerRes = await fetch(process.env.SUPABASE_URL + '/auth/v1/user', {
-    headers: { 'apikey': process.env.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + callerToken }
-  });
-  if (!callerRes.ok) {
+  try {
+    const callerToken = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!callerToken) {
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
+    const callerRes = await fetch(SUPABASE_URL + '/auth/v1/user', {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + callerToken }
+    });
+    if (!callerRes.ok) {
+      return res.status(401).json({ error: 'Not authenticated.' });
+    }
+  } catch (authError) {
+    console.error('Auth check error:', authError);
     return res.status(401).json({ error: 'Not authenticated.' });
   }
 
