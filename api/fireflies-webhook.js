@@ -3,6 +3,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Require a shared secret in the URL so only Fireflies (which we configure with it) can call this
+  if (req.query.token !== process.env.FIREFLIES_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: 'Not authorized.' });
+  }
+
   const { meetingId } = req.body;
   if (!meetingId) {
     return res.status(200).json({ received: true, note: 'No meetingId in payload — likely a test ping.' });
@@ -10,7 +15,7 @@ export default async function handler(req, res) {
 
   const FIREFLIES_KEY = process.env.FIREFLIES_API_KEY;
   const SUPABASE_URL = 'https://xjpdarzduikzstmrlgwp.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_eqncVVsKRSRsdkfmpx055Q_adi4s2E8';
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   try {
     const query = `query($id: String!) { transcript(id: $id) { id title date meeting_attendees { displayName email } sentences { speaker_name text } summary { overview } } }`;
@@ -33,7 +38,7 @@ export default async function handler(req, res) {
     for (const a of attendees) {
       if (!a.email) continue;
       const clientRes = await fetch(SUPABASE_URL + '/rest/v1/clients?email=eq.' + encodeURIComponent(a.email) + '&select=id', {
-        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+        headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
       });
       const clientData = await clientRes.json();
       if (clientData && clientData.length) {
@@ -47,7 +52,7 @@ export default async function handler(req, res) {
       const clientNameFromTitle = titleMatch ? titleMatch[1].trim() : null;
       if (clientNameFromTitle) {
         const nameRes = await fetch(SUPABASE_URL + '/rest/v1/clients?full_name=ilike.' + encodeURIComponent(clientNameFromTitle) + '&select=id', {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+          headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
         });
         const nameData = await nameRes.json();
         if (nameData && nameData.length) {
@@ -61,8 +66,8 @@ export default async function handler(req, res) {
     const saveRes = await fetch(SUPABASE_URL + '/rest/v1/consultation_transcripts', {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SERVICE_KEY,
+        'Authorization': 'Bearer ' + SERVICE_KEY,
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
