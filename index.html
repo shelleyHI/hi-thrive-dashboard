@@ -536,13 +536,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
       <div class="topbar"><span class="topbar-title">Resources</span></div>
       <div class="content">
         <div class="section-heading">Recommended for you by Shelley</div>
-        <div class="card">
-          <div class="resource-row"><div><div class="resource-title">Sleep better during menopause: a practical guide</div><div class="resource-meta">Guide · Sleep health</div></div><span class="badge badge-plum">new</span></div>
-          <div class="resource-row"><div><div class="resource-title">Strength training in menopause: your essential guide</div><div class="resource-meta">Guide · Exercise</div></div></div>
-          <div class="resource-row"><div><div class="resource-title">Nutrition for hormonal balance</div><div class="resource-meta">Guide · Nutrition</div></div></div>
-          <div class="resource-row"><div><div class="resource-title">Magnesium & menopause: the essential mineral</div><div class="resource-meta">Article · Supplements</div></div></div>
-          <div class="resource-row"><div><div class="resource-title">Understanding perimenopause</div><div class="resource-meta">Article · Education</div></div></div>
-        </div>
+        <div class="card" id="client-resources-list">Loading...</div>
       </div>
     </div>
   </div>
@@ -612,7 +606,7 @@ async function showApp(user) {
   document.getElementById('client-av').textContent = initials;
 
   loadChatHistory(email, 'client-msgs');
-    loadShelleyMessage(email);loadLabResults(email, 'client-labs');loadDaysOnPlan(email);loadHealthPlan(window.currentClientId, 'client-health-plan');
+    loadShelleyMessage(email);loadLabResults(email, 'client-labs');loadDaysOnPlan(email);loadHealthPlan(window.currentClientId, 'client-health-plan');loadResources(window.currentClientId, 'client-resources-list');
 }
 
 function renderMarkdown(text) {
@@ -719,12 +713,19 @@ async function renderClientCards() {
       '<textarea id="hp-' + c.id + '" placeholder="Write this client\'s health plan here (use **bold**, - bullet points, etc.)" style="width:100%;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;resize:none;height:100px;"></textarea>' +
       '<button class="btn btn-plum" style="margin-top:6px;width:100%;" onclick="saveHealthPlan(\'' + c.id + '\')">Save health plan</button>' +
       '<div id="hp-saved-' + c.id + '" style="display:none;color:var(--sage);font-size:12px;margin-top:6px;">✓ Saved</div>' +
+      '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;font-weight:600;color:var(--ink-light);">Resources</div>' +
+      '<div id="res-list-' + c.id + '" style="margin-top:6px;"></div>' +
+      '<input type="text" id="res-title-' + c.id + '" placeholder="Resource title" style="width:100%;margin-top:8px;padding:6px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;">' +
+      '<input type="text" id="res-desc-' + c.id + '" placeholder="Description (optional)" style="width:100%;margin-top:6px;padding:6px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;">' +
+      '<input type="text" id="res-link-' + c.id + '" placeholder="Link (optional)" style="width:100%;margin-top:6px;padding:6px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;">' +
+      '<button class="btn btn-plum" style="margin-top:6px;width:100%;" onclick="addResource(\'' + c.id + '\')">Add resource</button>' +
       '</div>';
   }).join('');
   for (const c of clientsList) {
     loadClientLogSingle(c.id, 'log-' + c.id);
     loadLabResults(c.email, 'labs-' + c.id);
     loadHealthPlanForEdit(c.id, 'hp-' + c.id);
+    loadResourcesForEdit(c.id, 'res-list-' + c.id);
   }
 }
 
@@ -748,6 +749,51 @@ async function saveHealthPlan(clientId) {
   const saved = document.getElementById('hp-saved-' + clientId);
   saved.style.display = 'block';
   setTimeout(() => saved.style.display = 'none', 2000);
+}
+
+async function loadResourcesForEdit(clientId, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const { data: items } = await sb.from('resources').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  if (!items || !items.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);">No resources added yet.</div>'; return; }
+  el.innerHTML = items.map(r =>
+    '<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">' +
+      '<div><strong>' + r.title + '</strong>' + (r.description ? '<br><span style="color:var(--ink-light);">' + r.description + '</span>' : '') + (r.link ? '<br><a href="' + r.link + '" target="_blank" style="color:var(--plum);">' + r.link + '</a>' : '') + '</div>' +
+      '<button class="btn" style="padding:2px 8px;font-size:11px;flex-shrink:0;" onclick="deleteResource(\'' + r.id + '\',\'' + clientId + '\')">Delete</button>' +
+    '</div>'
+  ).join('');
+}
+
+async function addResource(clientId) {
+  const title = document.getElementById('res-title-' + clientId).value.trim();
+  const description = document.getElementById('res-desc-' + clientId).value.trim();
+  const link = document.getElementById('res-link-' + clientId).value.trim();
+  if (!title) { alert('Please enter a title before adding.'); return; }
+  const { error } = await sb.from('resources').insert({ client_id: clientId, title, description: description || null, link: link || null });
+  if (error) { alert('Something went wrong adding the resource.'); console.error(error); return; }
+  document.getElementById('res-title-' + clientId).value = '';
+  document.getElementById('res-desc-' + clientId).value = '';
+  document.getElementById('res-link-' + clientId).value = '';
+  loadResourcesForEdit(clientId, 'res-list-' + clientId);
+}
+
+async function deleteResource(resourceId, clientId) {
+  const { error } = await sb.from('resources').delete().eq('id', resourceId);
+  if (error) { alert('Something went wrong deleting the resource.'); console.error(error); return; }
+  loadResourcesForEdit(clientId, 'res-list-' + clientId);
+}
+
+async function loadResources(clientId, containerId) {
+  const el = document.getElementById(containerId);
+  if (!clientId) { el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added any resources yet.</div>'; return; }
+  const { data: items } = await sb.from('resources').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  if (!items || !items.length) { el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added any resources yet.</div>'; return; }
+  el.innerHTML = items.map(r =>
+    '<div class="resource-row"><div><div class="resource-title">' + r.title + '</div>' +
+    (r.description ? '<div class="resource-meta">' + r.description + '</div>' : '') +
+    (r.link ? '<div class="resource-meta"><a href="' + r.link + '" target="_blank" style="color:var(--plum);">View resource →</a></div>' : '') +
+    '</div></div>'
+  ).join('');
 }
 
 async function savePlanStartDate(clientId) {
