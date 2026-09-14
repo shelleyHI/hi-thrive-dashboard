@@ -581,7 +581,7 @@ async function showApp(user) {
   document.getElementById('client-av').textContent = initials;
 
   loadChatHistory(email, 'client-msgs');
-  loadShelleyMessage(email);loadLabResults(email, 'client-labs');loadDaysOnPlan(email);
+    loadShelleyMessage(email);loadLabResults(email, 'client-labs');loadDaysOnPlan(email);loadHealthPlan(window.currentClientId, 'client-health-plan');
 }
 
 function renderMarkdown(text) {
@@ -740,6 +740,28 @@ async function loadDaysOnPlan(email) {
   const days = Math.floor((today - start) / (1000 * 60 * 60 * 24));
   valueEl.textContent = days;
   subEl.textContent = 'Started ' + start.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+async function loadHealthPlan(clientId, containerId) {
+  const el = document.getElementById(containerId);
+  if (!clientId) { el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added your health plan yet — check back after your next appointment.</div>'; return; }
+  const { data } = await sb.from('health_plans').select('plan_content').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!data || !data.plan_content) {
+    el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added your health plan yet — check back after your next appointment.</div>';
+    return;
+  }
+  el.innerHTML = renderMarkdown(data.plan_content);
+}
+
+async function loadHealthPlan(clientId, containerId) {
+  const el = document.getElementById(containerId);
+  if (!clientId) { el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added your health plan yet — check back after your next appointment.</div>'; return; }
+  const { data } = await sb.from('health_plans').select('plan_content').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!data || !data.plan_content) {
+    el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added your health plan yet — check back after your next appointment.</div>';
+    return;
+  }
+  el.innerHTML = renderMarkdown(data.plan_content);
 }
 
 async function loadLabResults(email, containerId) {
