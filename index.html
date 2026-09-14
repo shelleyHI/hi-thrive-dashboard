@@ -664,14 +664,40 @@ async function createNewClient() {
       '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;"><label style="font-size:11px;color:var(--ink-light);">Plan start:</label><input type="date" id="plan-' + c.id + '" value="' + (c.plan_start_date || '') + '" style="font-size:12px;padding:4px;border:1px solid var(--border);border-radius:6px;"><button class="btn btn-sage" style="padding:4px 8px;font-size:11px;" onclick="savePlanStartDate(\'' + c.id + '\')">Save</button></div>' +
       '<div id="log-' + c.id + '"></div>' +
       '<div id="labs-' + c.id + '"></div>' +
-      '<textarea id="msg-' + c.id + '" placeholder="Write a message for this client..." style="width:100%;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;resize:none;height:60px;"></textarea>' +
+           '<textarea id="msg-' + c.id + '" placeholder="Write a message for this client..." style="width:100%;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;resize:none;height:60px;"></textarea>' +
       '<button class="btn btn-sage" style="margin-top:6px;width:100%;" onclick="saveClientMessage(\'' + c.email + '\',\'msg-' + c.id + '\')">Save message</button>' +
+      '<textarea id="hp-' + c.id + '" placeholder="Write this client\'s health plan here (use **bold**, - bullet points, etc.)" style="width:100%;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:\'DM Sans\',sans-serif;font-size:13px;resize:none;height:100px;"></textarea>' +
+      '<button class="btn btn-plum" style="margin-top:6px;width:100%;" onclick="saveHealthPlan(\'' + c.id + '\')">Save health plan</button>' +
+      '<div id="hp-saved-' + c.id + '" style="display:none;color:var(--sage);font-size:12px;margin-top:6px;">✓ Saved</div>' +
       '</div>';
   }).join('');
   for (const c of clientsList) {
     loadClientLogSingle(c.id, 'log-' + c.id);
     loadLabResults(c.email, 'labs-' + c.id);
+    loadHealthPlanForEdit(c.id, 'hp-' + c.id);
   }
+}
+
+async function loadHealthPlanForEdit(clientId, textareaId) {
+  const { data } = await sb.from('health_plans').select('plan_content').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const el = document.getElementById(textareaId);
+  if (el && data && data.plan_content) el.value = data.plan_content;
+}
+
+async function saveHealthPlan(clientId) {
+  const content = document.getElementById('hp-' + clientId).value.trim();
+  if (!content) { alert('Please write a plan before saving.'); return; }
+  const { data: existing } = await sb.from('health_plans').select('id').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  let error;
+  if (existing) {
+    ({ error } = await sb.from('health_plans').update({ plan_content: content, status: 'published' }).eq('id', existing.id));
+  } else {
+    ({ error } = await sb.from('health_plans').insert({ client_id: clientId, plan_content: content, status: 'published' }));
+  }
+  if (error) { alert('Something went wrong saving the plan.'); console.error(error); return; }
+  const saved = document.getElementById('hp-saved-' + clientId);
+  saved.style.display = 'block';
+  setTimeout(() => saved.style.display = 'none', 2000);
 }
 
 async function savePlanStartDate(clientId) {
