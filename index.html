@@ -308,7 +308,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
          <div class="metric"><div class="metric-label">Active clients</div><div class="metric-value" id="stat-active-clients">—</div></div>
           <div class="metric"><div class="metric-label">Consultations</div><div class="metric-value" id="stat-consultations">—</div></div>
           <div class="metric"><div class="metric-label">Health plans</div><div class="metric-value" id="stat-health-plans">—</div></div>
-          <div class="metric"><div class="metric-label">Pending emails</div><div class="metric-value">0</div></div>
+          <div class="metric"><div class="metric-label">Pending emails</div><div class="metric-value" id="stat-pending-emails">—</div></div>
         </div>
         <div class="section-heading">Recent consultations</div>
         <div class="card">
@@ -390,13 +390,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(-
       </div>
     </div>
     <div id="prac-emails" class="page">
-      <div class="topbar"><span class="topbar-title">Emails</span><button class="btn btn-sage">+ Compose</button></div>
+      <div class="topbar"><span class="topbar-title">Emails</span><button class="btn btn-sage" onclick="toggleComposeForm()">+ Compose</button></div>
       <div class="content">
-        <div class="card">
-          <div class="row"><div><div class="row-primary">Welcome to HI Thrive, Natasha — your action plan</div><div class="row-secondary">Natasha Allmark · Follow-up</div></div><span class="badge badge-sage">sent</span></div>
-          <div class="row"><div><div class="row-primary">Simone's 6-week check-in — wonderful progress!</div><div class="row-secondary">Simone Clarke · Follow-up</div></div><span class="badge badge-sage">sent</span></div>
-          <div class="row"><div><div class="row-primary">Seema's postmenopause wellness plan is ready</div><div class="row-secondary">Seema Barooah · Plan delivery</div></div><span class="badge badge-sage">sent</span></div>
+        <div id="compose-email-form" class="card" style="display:none;margin-bottom:20px;">
+          <select id="email-client" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
+            <option value="">Loading clients...</option>
+          </select>
+          <input id="email-subject" type="text" placeholder="Subject" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;">
+          <textarea id="email-body" placeholder="Write the email..." style="width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;height:120px;"></textarea>
+          <div style="display:flex;gap:8px;">
+            <button class="btn" style="flex:1;" onclick="saveEmail('draft')">Save as draft</button>
+            <button class="btn btn-sage" style="flex:1;" onclick="saveEmail('sent')">Mark as sent</button>
+          </div>
+          <div id="email-saved-status" style="margin-top:8px;font-size:12px;"></div>
         </div>
+        <div class="card" id="emails-list">Loading...</div>
       </div>
     </div>
   </div>
@@ -596,7 +604,7 @@ async function showApp(user) {
     if (!clientMatch.guide_seen) {
       document.getElementById('welcome-modal').style.display = 'flex';
     }
-   }if (staffMatch) { renderClientCards(); populateLabClientDropdown(); }if (staffMatch) { loadPracDashboardStats(); loadHealthPlansStatus(); }
+   }if (staffMatch) { renderClientCards(); populateLabClientDropdown(); populateEmailClientDropdown(); loadEmailsList(); }if (staffMatch) { loadPracDashboardStats(); loadHealthPlansStatus(); }
   const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
   document.getElementById('client-welcome').textContent = 'Welcome, ' + name.split(' ')[0];
@@ -667,12 +675,15 @@ async function createNewClient() {
   const { count: clientCount } = await sb.from('clients').select('*', { count: 'exact', head: true });
   const { count: consultCount } = await sb.from('consultations').select('*', { count: 'exact', head: true });
   const { count: planCount } = await sb.from('health_plans').select('*', { count: 'exact', head: true });
+  const { count: pendingCount } = await sb.from('emails').select('*', { count: 'exact', head: true }).eq('status', 'draft');
   const clientsEl = document.getElementById('stat-active-clients');
   const consultEl = document.getElementById('stat-consultations');
   const plansEl = document.getElementById('stat-health-plans');
+  const pendingEl = document.getElementById('stat-pending-emails');
   if (clientsEl) clientsEl.textContent = clientCount ?? '—';
   if (consultEl) consultEl.textContent = consultCount ?? '—';
     if (plansEl) plansEl.textContent = planCount ?? '—';
+  if (pendingEl) pendingEl.textContent = pendingCount ?? '—';
 }
 
 async function loadHealthPlansStatus() {
@@ -818,6 +829,47 @@ async function populateLabClientDropdown() {
   const sel = document.getElementById('lab-client');
   if (!clientsList || !sel) return;
   sel.innerHTML = clientsList.map(c => '<option value="' + c.email + '">' + (c.full_name || c.email) + '</option>').join('');
+}
+
+function toggleComposeForm() {
+  const form = document.getElementById('compose-email-form');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function populateEmailClientDropdown() {
+  const { data: clientsList } = await sb.from('clients').select('id, full_name, email').order('full_name', { ascending: true });
+  const sel = document.getElementById('email-client');
+  if (!clientsList || !sel) return;
+  sel.innerHTML = '<option value="">Select a client</option>' + clientsList.map(c => '<option value="' + c.id + '">' + (c.full_name || c.email) + '</option>').join('');
+}
+
+async function saveEmail(status) {
+  const clientId = document.getElementById('email-client').value;
+  const subject = document.getElementById('email-subject').value.trim();
+  const body = document.getElementById('email-body').value.trim();
+  const statusEl = document.getElementById('email-saved-status');
+  if (!clientId || !subject) { statusEl.textContent = 'Please select a client and add a subject.'; statusEl.style.color = 'red'; return; }
+  const { error } = await sb.from('emails').insert({ client_id: clientId, subject, body: body || null, status });
+  if (error) { statusEl.textContent = 'Something went wrong.'; statusEl.style.color = 'red'; console.error(error); return; }
+  statusEl.textContent = status === 'sent' ? '✓ Marked as sent' : '✓ Saved as draft';
+  statusEl.style.color = 'var(--sage)';
+  document.getElementById('email-client').value = '';
+  document.getElementById('email-subject').value = '';
+  document.getElementById('email-body').value = '';
+  loadEmailsList();
+  loadPracDashboardStats();
+}
+
+async function loadEmailsList() {
+  const el = document.getElementById('emails-list');
+  if (!el) return;
+  const { data: items } = await sb.from('emails').select('*, clients(full_name, email)').order('created_at', { ascending: false });
+  if (!items || !items.length) { el.innerHTML = '<div style="padding:20px;color:var(--ink-light);text-align:center;">No emails logged yet.</div>'; return; }
+  el.innerHTML = items.map(e => {
+    const name = e.clients ? (e.clients.full_name || e.clients.email) : 'Unknown client';
+    const badge = e.status === 'sent' ? '<span class="badge badge-sage">sent</span>' : '<span class="badge badge-amber">draft</span>';
+    return '<div class="row"><div><div class="row-primary">' + e.subject + '</div><div class="row-secondary">' + name + '</div></div>' + badge + '</div>';
+  }).join('');
 }
 
 async function loadDaysOnPlan(email) {
