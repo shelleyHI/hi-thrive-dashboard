@@ -752,18 +752,6 @@ async function loadHealthPlan(clientId, containerId) {
   }
   el.innerHTML = renderMarkdown(data.plan_content);
 }
-
-async function loadHealthPlan(clientId, containerId) {
-  const el = document.getElementById(containerId);
-  if (!clientId) { el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added your health plan yet — check back after your next appointment.</div>'; return; }
-  const { data } = await sb.from('health_plans').select('plan_content').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).maybeSingle();
-  if (!data || !data.plan_content) {
-    el.innerHTML = '<div style="color:var(--ink-light);font-size:13px;">Your practitioner hasn\'t added your health plan yet — check back after your next appointment.</div>';
-    return;
-  }
-  el.innerHTML = renderMarkdown(data.plan_content);
-}
-
 async function loadLabResults(email, containerId) {
   const el = document.getElementById(containerId);
   const { data: client } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
