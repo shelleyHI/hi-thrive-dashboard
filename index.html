@@ -598,9 +598,12 @@ async function showApp(user) {
     return;
   }
 
-  if (!staffMatch && clientMatch) {
+   if (!staffMatch && clientMatch) {
     document.getElementById('tab-prac').style.display = 'none';
     switchView('client');
+    if (!clientMatch.guide_seen) {
+      document.getElementById('welcome-modal').style.display = 'flex';
+    }
    }if (staffMatch) { renderClientCards(); populateLabClientDropdown(); }if (staffMatch) { loadPracDashboardStats(); loadHealthPlansStatus(); }
   const name = user.email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
