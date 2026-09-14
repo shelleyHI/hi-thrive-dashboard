@@ -958,11 +958,22 @@ function closeSidebar() {
   document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('open'));
   document.getElementById('sidebar-overlay').classList.remove('open');
 }
-  function switchView(v) {
+   function switchView(v) {
   document.getElementById('view-prac').classList.toggle('active', v==='prac');
   document.getElementById('view-client').classList.toggle('active', v==='client');
   document.getElementById('tab-prac').className = 'mode-tab' + (v==='prac'?' active-prac':'');
   document.getElementById('tab-client').className = 'mode-tab' + (v==='client'?' active-client':'');
+}
+
+function openWelcomeModal() {
+  document.getElementById('welcome-modal').style.display = 'flex';
+}
+
+async function closeWelcomeModal() {
+  document.getElementById('welcome-modal').style.display = 'none';
+  if (window.currentClientId) {
+    await sb.from('clients').update({ guide_seen: true }).eq('id', window.currentClientId);
+  }
 }
 
 function showPage(view, id, el) {
